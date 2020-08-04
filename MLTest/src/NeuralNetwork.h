@@ -6,11 +6,14 @@
 namespace ML
 {
 
+	using MatrixFn = std::function<Eigen::MatrixXd(const Eigen::MatrixXd&)>;
+
 	struct ActivationFunction
 	{
 	public:
-		std::function<double(double)> Function;
-		std::function<double(double)> Derivative;
+		std::string Name;
+		MatrixFn Function;
+		MatrixFn Derivative;
 	};
 
 	struct Layer
@@ -26,14 +29,13 @@ namespace ML
 		struct Cache
 		{
 		public:
-			Eigen::MatrixXd Z;
-			Eigen::MatrixXd A;
+			Eigen::MatrixXd BeforeActivation;
+			Eigen::MatrixXd AfterActivation;
 		};
 
 	private:
 		std::vector<Eigen::MatrixXd> m_Weights;
-		std::vector<Eigen::MatrixXd> m_Biases;
-		std::vector<Eigen::MatrixXd> m_Layers;
+		std::vector<Eigen::RowVectorXd> m_Biases;
 		std::vector<ActivationFunction> m_Functions;
 		std::vector<Cache> m_Cache;
 
@@ -49,9 +51,14 @@ namespace ML
 
 		Eigen::MatrixXd evaluate(const Eigen::MatrixXd& value) const;
 
-	private:
-		Eigen::MatrixXd broadcast_bias(const Eigen::MatrixXd& bias, int rows) const;
+		bool save(const std::string& filename) const;
+
+	public:
+		static NeuralNetwork load(const std::string& filename);
 
 	};
+
+	extern ActivationFunction RELU;
+	extern ActivationFunction LINEAR;
 
 }

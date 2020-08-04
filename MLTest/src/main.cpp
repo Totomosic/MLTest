@@ -4,27 +4,25 @@
 #include <random>
 #include "NeuralNetwork.h"
 
-using namespace Eigen;
-
 int main()
 {
-	srand(42);
+	int sample_size = 512;
 
-	ML::ActivationFunction relu = { [](double x) { return std::max(x, 0.0); }, [](double x) { return (x > 0) ? 1.0 : 0.0; } };
-	ML::ActivationFunction linear = { [](double x) { return x; }, [](double x) { return 1.0; } };
-
-	int sample_size = 256;
-
-	ML::NeuralNetwork nn({ { 64, relu }, { 1, linear } }, 1);
-	nn.set_learning_rate(0.0002);
-	for (int i = 0; i < 25000; i++)
+	ML::NeuralNetwork nn({ { 16, ML::RELU }, { 1, ML::LINEAR } }, 2);
+	nn.set_learning_rate(0.07);
+	for (int i = 0; i < 50000; i++)
 	{
-		MatrixXd data = Eigen::MatrixXd::Random(sample_size, 1);
-		MatrixXd result = data.unaryExpr([](double x) { return x * x; });
+		Eigen::MatrixXd data = Eigen::MatrixXd::Random(sample_size, 2);
+		Eigen::MatrixXd result = Eigen::MatrixXd::Constant(sample_size, 1, 0.0);
+		for (int i = 0; i < sample_size; i++)
+		{
+			result(i, 0) = data.row(i).sum();
+		}
 		nn.feed_forward(data);
 		nn.back_propagate(data, result);
 	}
-	std::cout << (nn.evaluate(MatrixXd::Constant(1, 1, 0.5))(0, 0)) << std::endl;
+	Eigen::Vector2d point(0.5, -0.3);
+	std::cout << (nn.evaluate(point.transpose())) << std::endl;
 
 	return 0;
 }
