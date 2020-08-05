@@ -4,12 +4,20 @@
 #include <random>
 #include "NeuralNetwork.h"
 
+#include "Layers/DenseLayer.h"
+
 int main()
 {
 	int sample_size = 512;
 
-	ML::NeuralNetwork nn({ { 16, ML::RELU }, { 1, ML::LINEAR } }, 2);
-	nn.set_learning_rate(0.07);
+	ML::NeuralNetwork nn(2);
+
+	nn.AddLayer<ML::DenseLayer>(4).SetActivation(ML::RELU);
+	nn.AddLayer<ML::DenseLayer>(1).SetActivation(ML::LINEAR);
+
+	nn.Compile();
+
+	nn.SetLearningRate(0.005);
 	for (int i = 0; i < 50000; i++)
 	{
 		Eigen::MatrixXd data = Eigen::MatrixXd::Random(sample_size, 2);
@@ -18,11 +26,11 @@ int main()
 		{
 			result(i, 0) = data.row(i).sum();
 		}
-		nn.feed_forward(data);
-		nn.back_propagate(data, result);
+		nn.FeedForward(data);
+		nn.BackPropagate(data, result);
 	}
-	Eigen::Vector2d point(0.5, -0.3);
-	std::cout << (nn.evaluate(point.transpose())) << std::endl;
+	Eigen::Vector2d point(0.5, 0.4);
+	std::cout << (nn.Evaluate(point.transpose())) << std::endl;
 
 	return 0;
 }

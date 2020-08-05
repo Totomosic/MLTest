@@ -1,27 +1,11 @@
 #pragma once
-#include "Eigen/Dense"
+#include "Activation.h"
+#include "Layer.h"
 #include <vector>
-#include <functional>
+#include <memory>
 
 namespace ML
 {
-
-	using MatrixFn = std::function<Eigen::MatrixXd(const Eigen::MatrixXd&)>;
-
-	struct ActivationFunction
-	{
-	public:
-		std::string Name;
-		MatrixFn Function;
-		MatrixFn Derivative;
-	};
-
-	struct Layer
-	{
-	public:
-		int Size;
-		ActivationFunction Function;
-	};
 
 	class NeuralNetwork
 	{
@@ -34,31 +18,37 @@ namespace ML
 		};
 
 	private:
-		std::vector<Eigen::MatrixXd> m_Weights;
-		std::vector<Eigen::RowVectorXd> m_Biases;
-		std::vector<ActivationFunction> m_Functions;
-		std::vector<Cache> m_Cache;
-
+		int m_InputDimension;
+		std::vector<std::unique_ptr<Layer>> m_Layers;
 		double m_LearningRate;
 
-	public:
-		NeuralNetwork(const std::vector<Layer>& topology, int input_cols);
-
-		void set_learning_rate(double rate);
-
-		void feed_forward(const Eigen::MatrixXd& input);
-		void back_propagate(const Eigen::MatrixXd& input, const Eigen::MatrixXd& expected);
-
-		Eigen::MatrixXd evaluate(const Eigen::MatrixXd& value) const;
-
-		bool save(const std::string& filename) const;
+		std::vector<Eigen::MatrixXd> m_LastRoundResults;
 
 	public:
-		static NeuralNetwork load(const std::string& filename);
+		NeuralNetwork(int input_cols);
+
+		void SetLearningRate(double rate);
+
+		template<typename T, typename ... Args>
+		T& AddLayer(Args&& ... args)
+		{
+			auto layer = std::make_unique<T>(std::forward<Args>(args)...);
+			T* ptr = layer.get();
+			m_Layers.push_back(std::move(layer));
+			return *ptr;
+		}
+
+		void Compile();
+		void FeedForward(const Eigen::MatrixXd& input);
+		void BackPropagate(const Eigen::MatrixXd& input, const Eigen::MatrixXd& expected);
+
+		Eigen::MatrixXd Evaluate(const Eigen::MatrixXd& value) const;
+
+		bool Save(const std::string& filename) const;
+
+	public:
+		static NeuralNetwork Load(const std::string& filename);
 
 	};
-
-	extern ActivationFunction RELU;
-	extern ActivationFunction LINEAR;
 
 }
