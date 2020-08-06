@@ -4,8 +4,8 @@
 namespace ML
 {
 
-	NeuralNetwork::NeuralNetwork(int input_cols)
-		: m_InputDimension(input_cols), m_Layers(), m_LearningRate(0.05), m_LastRoundResults()
+	NeuralNetwork::NeuralNetwork(int inputCols)
+		: m_InputDimension(inputCols), m_Layers(), m_LearningRate(0.05), m_LastRoundResults()
 	{
 	}
 
@@ -55,6 +55,7 @@ namespace ML
 			else
 				previous = input;
 		}
+		m_LastRoundResults.clear();
 	}
 
 	Eigen::MatrixXd NeuralNetwork::Evaluate(const Eigen::MatrixXd& value) const

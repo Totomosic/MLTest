@@ -29,7 +29,7 @@ int main()
 		nn.FeedForward(data);
 		nn.BackPropagate(data, result);
 	}
-	Eigen::Vector2d point(0.5, 0.4);
+	Eigen::Vector2d point(0.52, 0.15);
 	std::cout << (nn.Evaluate(point.transpose())) << std::endl;
 
 	return 0;

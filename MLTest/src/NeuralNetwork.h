@@ -25,7 +25,7 @@ namespace ML
 		std::vector<Eigen::MatrixXd> m_LastRoundResults;
 
 	public:
-		NeuralNetwork(int input_cols);
+		NeuralNetwork(int inputCols);
 
 		void SetLearningRate(double rate);
 
