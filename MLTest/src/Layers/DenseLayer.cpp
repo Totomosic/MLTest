@@ -1,4 +1,5 @@
 #include "DenseLayer.h"
+#include <iostream>
 
 namespace ML
 {
@@ -55,6 +56,32 @@ namespace ML
     Eigen::MatrixXd DenseLayer::GetError(const Eigen::MatrixXd& values)
     {
         return m_After - values;
+    }
+
+    void DenseLayer::Save(OutputMemoryStream& stream) const
+    {
+        LayerHeader header = { "Dense" };
+        Serialize(stream, header);
+        stream.Write(GetOutputDimension());
+        stream.Write(GetActivation().Name);
+        stream.Write(m_Weights);
+        stream.Write(m_Biases);
+    }
+
+    std::unique_ptr<DenseLayer> DenseLayer::Load(InputMemoryStream& stream)
+    {
+        int dimension;
+        stream.Read(dimension);
+
+        std::unique_ptr<DenseLayer> layer = std::make_unique<DenseLayer>(dimension);
+
+        std::string activationName;
+        stream.Read(activationName);
+        stream.Read(layer->m_Weights);
+        stream.Read(layer->m_Biases);
+
+        layer->SetActivation(ACTIVATION_MAP[activationName]);
+        return layer;
     }
 
 }

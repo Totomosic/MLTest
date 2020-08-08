@@ -29,4 +29,24 @@ namespace ML
 		[](const Eigen::MatrixXd& x) { return x.unaryExpr([](double x) { return 1.0; }); }
 	};
 
+	ActivationFunction SWISH = {
+		"swish",
+		[](const Eigen::MatrixXd& x) { return x.unaryExpr([](double x) { return x / (1.0 + std::exp(-x)); }); },
+		[](const Eigen::MatrixXd& x) {
+			return x.unaryExpr([](double x) {
+				double exp = std::exp(x);
+				double expPlusOne = exp + 1.0;
+				return exp * (exp + x + 1.0) / (expPlusOne * expPlusOne);
+			});
+		}
+	};
+
+	std::unordered_map<std::string, ActivationFunction> ACTIVATION_MAP = {
+		{ "relu", RELU },
+		{ "tanh", TANH },
+		{ "sigmoid", SIGMOID },
+		{ "linear", LINEAR },
+		{ "swish", SWISH },
+	};
+
 }

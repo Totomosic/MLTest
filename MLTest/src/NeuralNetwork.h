@@ -10,14 +10,6 @@ namespace ML
 	class NeuralNetwork
 	{
 	private:
-		struct Cache
-		{
-		public:
-			Eigen::MatrixXd BeforeActivation;
-			Eigen::MatrixXd AfterActivation;
-		};
-
-	private:
 		int m_InputDimension;
 		std::vector<std::unique_ptr<Layer>> m_Layers;
 		double m_LearningRate;
@@ -29,18 +21,24 @@ namespace ML
 
 		void SetLearningRate(double rate);
 
-		template<typename T, typename ... Args>
-		T& AddLayer(Args&& ... args)
+		template<typename T>
+		T& AddLayer(std::unique_ptr<T>&& layer)
 		{
-			auto layer = std::make_unique<T>(std::forward<Args>(args)...);
 			T* ptr = layer.get();
 			m_Layers.push_back(std::move(layer));
 			return *ptr;
 		}
 
+		template<typename T, typename ... Args>
+		T& AddLayer(Args&& ... args)
+		{
+			auto layer = std::make_unique<T>(std::forward<Args>(args)...);
+			return AddLayer<T>(std::move(layer));
+		}
+
 		void Compile();
 		void FeedForward(const Eigen::MatrixXd& input);
-		void BackPropagate(const Eigen::MatrixXd& input, const Eigen::MatrixXd& expected);
+		Eigen::MatrixXd BackPropagate(const Eigen::MatrixXd& input, const Eigen::MatrixXd& expected);
 
 		Eigen::MatrixXd Evaluate(const Eigen::MatrixXd& value) const;
 

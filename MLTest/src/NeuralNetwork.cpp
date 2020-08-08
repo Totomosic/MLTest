@@ -1,5 +1,8 @@
 #include "NeuralNetwork.h"
 #include <iostream>
+#include <fstream>
+
+#include "Layers/DenseLayer.h"
 
 namespace ML
 {
@@ -37,25 +40,27 @@ namespace ML
 		}
 	}
 
-	void NeuralNetwork::BackPropagate(const Eigen::MatrixXd& input, const Eigen::MatrixXd& expected)
+	Eigen::MatrixXd NeuralNetwork::BackPropagate(const Eigen::MatrixXd& input, const Eigen::MatrixXd& expected)
 	{
-		Eigen::MatrixXd previous = input;
+		const Eigen::MatrixXd* previous = &input;
 		if (m_LastRoundResults.size() >= 2)
 		{
-			previous = m_LastRoundResults[m_LastRoundResults.size() - 2];
+			previous = &m_LastRoundResults[m_LastRoundResults.size() - 2];
 		}
 		Eigen::MatrixXd error = m_Layers.back()->GetError(expected);
+		Eigen::MatrixXd originalError = error;
 
 		for (int i = m_Layers.size() - 1; i >= 0; i--)
 		{
-			error = m_Layers[i]->BackPropagate(m_LearningRate, error, previous);
+			error = m_Layers[i]->BackPropagate(m_LearningRate, error, *previous);
 
 			if (i >= 2)
-				previous = m_LastRoundResults[(size_t)i - 2];
+				previous = &m_LastRoundResults[(size_t)i - 2];
 			else
-				previous = input;
+				previous = &input;
 		}
 		m_LastRoundResults.clear();
+		return originalError;
 	}
 
 	Eigen::MatrixXd NeuralNetwork::Evaluate(const Eigen::MatrixXd& value) const
@@ -76,14 +81,61 @@ namespace ML
 
 	bool NeuralNetwork::Save(const std::string& filename) const
 	{
+		OutputMemoryStream stream;
+		stream.Write(m_InputDimension);
+		stream.Write(m_LearningRate);
+		stream.Write((int)m_Layers.size());
+		for (const auto& layer : m_Layers)
+		{
+			layer->Save(stream);
+		}
+		std::ofstream file(filename, std::ios::out | std::ios::binary);
+		if (file.good())
+		{
+			file.write((const char*)stream.GetBufferPtr(), stream.GetDataSize());
+			return true;
+		}
 		return false;
 	}
 
 	NeuralNetwork NeuralNetwork::Load(const std::string& filename)
 	{
-		std::vector<Layer> topology;
-		int input_cols = 0;
-		return NeuralNetwork(input_cols);
+		std::ifstream file(filename, std::ifstream::ate | std::ifstream::binary);
+		if (file.good())
+		{
+			int inputDimension;
+			double learningRate;
+			int layerCount;
+
+			size_t filesize = file.tellg();
+			file.seekg(0);
+
+			std::byte* buffer = new std::byte[filesize];
+			file.read((char*)buffer, filesize);
+
+			InputMemoryStream stream(buffer, filesize);
+			delete[] buffer;
+
+			stream.Read(inputDimension);
+			stream.Read(learningRate);
+			stream.Read(layerCount);
+
+			NeuralNetwork nn(inputDimension);
+			nn.SetLearningRate(learningRate);
+
+			for (int i = 0; i < layerCount; i++)
+			{
+				LayerHeader header;
+				Deserialize(stream, header);
+				if (header.Name == "Dense")
+				{
+					nn.AddLayer(DenseLayer::Load(stream));
+				}
+			}
+
+			return nn;
+		}
+		return NeuralNetwork(0);
 	}
 
 }

@@ -1,8 +1,25 @@
 #pragma once
 #include "Activation.h"
+#include "Stream.h"
 
 namespace ML
 {
+
+	struct LayerHeader
+	{
+	public:
+		std::string Name;
+	};
+
+	inline void Serialize(OutputMemoryStream& stream, const LayerHeader& header)
+	{
+		stream.Write(header.Name);
+	}
+
+	inline void Deserialize(InputMemoryStream& stream, LayerHeader& header)
+	{
+		stream.Read(header.Name);
+	}
 
 	class Layer
 	{
@@ -24,6 +41,8 @@ namespace ML
 		virtual Eigen::MatrixXd BackPropagate(double learningRate, const Eigen::MatrixXd& error, const Eigen::MatrixXd& previous) = 0;
 		virtual void Evaluate(Eigen::MatrixXd& values) = 0;
 		virtual Eigen::MatrixXd GetError(const Eigen::MatrixXd& values) = 0;
+
+		virtual void Save(OutputMemoryStream& stream) const = 0;
 
 	protected:
 		inline void Activate(Eigen::MatrixXd& values) { values = m_Activation.Function(values); }

@@ -2,6 +2,7 @@
 #include "Eigen/Dense"
 #include <functional>
 #include <string>
+#include <unordered_map>
 
 namespace ML
 {
@@ -20,5 +21,8 @@ namespace ML
 	extern ActivationFunction TANH;
 	extern ActivationFunction SIGMOID;
 	extern ActivationFunction LINEAR;
+	extern ActivationFunction SWISH;
+
+	extern std::unordered_map<std::string, ActivationFunction> ACTIVATION_MAP;
 
 }

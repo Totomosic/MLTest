@@ -26,6 +26,11 @@ namespace ML
 		Eigen::MatrixXd BackPropagate(double learningRate, const Eigen::MatrixXd& error, const Eigen::MatrixXd& previous) override;
 		void Evaluate(Eigen::MatrixXd& values) override;
 		Eigen::MatrixXd GetError(const Eigen::MatrixXd& values) override;
+
+		void Save(OutputMemoryStream& stream) const override;
+
+	public:
+		static std::unique_ptr<DenseLayer> Load(InputMemoryStream& stream);
 	};
 
 }
